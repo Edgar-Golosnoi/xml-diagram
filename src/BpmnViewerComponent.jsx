@@ -1,94 +1,60 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import BpmnViewer from 'bpmn-js';
+import React, { useState, useEffect } from 'react';
+import BpmnViewer from 'bpmn-js/lib/Viewer';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
+import { bpmnXml } from './Xmls/XmlTwo';
 import './BpmnViewerComponent.css';
-import { bpmnXml } from './Xmls/Xml';
 
 const BpmnViewerComponent = () => {
   const [viewer, setViewer] = useState(null);
 
-  const importXml = useCallback(async () => {
-    if (!bpmnXml || !viewer) return;
-
-    try {
+  useEffect(() => {
+    if (viewer) {
       const modeler = new BpmnModeler({ container: '#container' });
-      await modeler.importXML(bpmnXml);
-
-      console.log('Успешно импортирован!');
-
-      modeler.on('import.done', (event) => {
-        const { definitions } = event;
-        const rootElement = definitions.rootElements[0];
-        const flowElements = rootElement.flowElements;
-
-        let currentIndex = 0;
-
-        const animateToken = () => {
-          if (currentIndex >= flowElements.length) {
-            currentIndex = 0;
-          }
-
-          const element = flowElements[currentIndex];
-
-          if (element.$type === 'bpmn:StartEvent') {
-            currentIndex++;
-            animateToken();
-            return;
-          }
-
+      modeler.importXML(bpmnXml, (err) => {
+        if (err) {
+          console.error('Ошибка в импорте:', err);
+        } else {
+          console.log('Импорт успешно завершен');
           const token = modeler.get('elementFactory').createShape({
             type: 'bpmn:Token',
-            x: element.x - 10,
-            y: element.y + 20,
             attrs: {
               circle: {
-                fill: 'green',
-                stroke: 'black',
-                strokeWidth: 1,
-                strokeOpacity: 1
+                fill: '#00ff00', // зеленый цвет
               }
-            },
-            class: 'bpmn-token'
+            }
           });
+        
+          // Setting an expanded attribute on the token element
+          token.businessObject.di.set('di:isExpanded', true);
+        
+          modeler.get('canvas').addShape(token);
+        
+          // Disabling context menu
+          modeler.get('contextPad').set('connect', () => {});
+          modeler.get('canvas').setContextMenu((event) => {
+            event.preventDefault();
+          });
+        
+          const contextMenu = modeler.get('contextPad');
+          contextMenu.addListener('open', function() {
+            const menuContainer = contextMenu.container;
+            menuContainer.style.backgroundColor = "#ffffff";
+          });
+        }
 
-          modeler.get('canvas').addShape(token, element);
-          
-          const tokenSubjectRef = modeler.get('moddle').create('bpmn:TokenSubjectReference');
-          tokenSubjectRef.$parent = element;
-          token.businessObject.tokenSubjectRef = tokenSubjectRef;
-
-          currentIndex++;
-          animateToken();
-        };
-
-        modeler.get('eventBus').on('element.click', (event) => {
-          const { element } = event;
-          currentIndex = flowElements.indexOf(element);
-          animateToken();
-        });
       });
-    } catch (err) {
-      console.error('Ошибка импорта', err);
     }
   }, [viewer]);
 
   useEffect(() => {
-    try {
-      const container = document.getElementById('container');
-      const newViewer = new BpmnViewer();
-      setViewer(newViewer);
-      newViewer.attachTo(container);
+    const container = document.getElementById('container');
+    const newViewer = new BpmnViewer();
+    setViewer(newViewer);
+    newViewer.attachTo(container);
 
-      container.style.left = '0';
-      container.style.height = '100vh';
-    } catch (err) {
-      console.error('Ошибка создания BpmnViewer:', err);
-    }
+    container.style.left = '0';
+    container.style.height = '100vh';
   }, []);
-
-  useEffect(() => {
-    importXml();
-  }, [importXml]);
 
   return (
     <div>
