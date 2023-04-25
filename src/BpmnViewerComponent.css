@@ -1,13 +1,14 @@
 
 circle {
   fill: #00ff00 !important;
-  /* stroke: #0000ff !important; */
-  stroke-width: 0.1px !important;
+  stroke: #033103 !important;
+  stroke-width: 0.5px !important;
 }
 
 #container .bjs-context-pad {
   background-color: white !important;
   /* color: black !important; */
+  border-radius: 40px;
 }
 
 
@@ -20,5 +21,26 @@ g.djs-bendpoints {
 
 body {
   fill: rgb(187, 187, 187);
+}
+
+div.bjs-container:nth-child(1) > div:nth-child(2) {
+  display: none;
+}
+
+.djs-search-input {
+  display: none;
+}
+
+div.bjs-container:nth-child(2) > div:nth-child(2) > svg:nth-child(2) {
+  display: none;
+}
+
+.notice {
+  display: none;
+}
+
+.djs-palette-shown > svg:nth-child(3) {
+  width: 1800px;
+  height: 1000px;
 }
 
